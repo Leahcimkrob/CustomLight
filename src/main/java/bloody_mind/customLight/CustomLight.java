@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Location;
+import org.bukkit.ChatColor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class CustomLight extends JavaPlugin {
     private final Map<Integer, Integer> modelIdToLightLevel = new HashMap<>();
     private String reloadMessage;
+    private String nopermission;    
     private final Map<UUID, Integer> lastModelId = new HashMap<>();
     private final Map<UUID, String> lastLocationKey = new HashMap<>();
     private final Map<UUID, Location> lastLightBlockLocation = new HashMap<>();
@@ -90,6 +92,7 @@ public class CustomLight extends JavaPlugin {
             }
         }
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
+        nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
     }
 
     private void checkAndPlaceLight(Player player, int modelId) {
@@ -113,9 +116,9 @@ public class CustomLight extends JavaPlugin {
         if (label.equalsIgnoreCase("clreload")) {
             if (sender.hasPermission("customlight.reload")) {
                 loadConfigValues();
-                sender.sendMessage(reloadMessage);
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', reloadMessage));
             } else {
-                sender.sendMessage("§cDu hast keine Berechtigung für diesen Befehl.");
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
             }
             return true;
         }
