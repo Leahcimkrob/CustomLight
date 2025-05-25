@@ -1,4 +1,4 @@
-package Bloody_Mind.package.CustomLight;
+package bloody_mind.package.customLight;
 
 import dev.lone.itemsadder.api.CustomStack;
 import org.bukkit.Bukkit;
@@ -17,26 +17,43 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class CustomLight extends JavaPlugin {
     private final Map<Integer, Integer> modelIdToLightLevel = new HashMap<>();
+    private String reloadMessage;
+    // Für Performance: Letzte Positionen und Modell-IDs der Spieler merken
+    private final Map<UUID, Integer> lastModelId = new HashMap<>();
+    private final Map<UUID, String> lastLocationKey = new HashMap<>();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        loadModelIds();
+        loadConfigValues();
 
+        // Task: Nur Spieler mit leuchtendem Helm und Positions-/Helmänderung werden geprüft
         new BukkitRunnable() {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    checkAndPlaceLight(player);
+                    CustomStack customStack = CustomStack.byItemStack(player.getInventory().getHelmet());
+                    int modelId = -1;
+                    if (customStack != null) {
+                        modelId = customStack.getCustomModelData();
+                    }
+                    String locationKey = player.getWorld().getName() + ":" + player.getLocation().getBlockX() + ":" + player.getLocation().getBlockY() + ":" + player.getLocation().getBlockZ();
+                    if (lastModelId.getOrDefault(player.getUniqueId(), -2) != modelId || !locationKey.equals(lastLocationKey.get(player.getUniqueId()))) {
+                        lastModelId.put(player.getUniqueId(), modelId);
+                        lastLocationKey.put(player.getUniqueId(), locationKey);
+                        checkAndPlaceLight(player, modelId);
+                    }
                 }
             }
-        }.runTaskTimer(this, 0, 20);
+        }.runTaskTimer(this, 0, 10); // 2x pro Sekunde (kann weiter verringert werden)
     }
 
-    private void loadModelIds() {
+    private void loadConfigValues() {
+        reloadConfig();
         FileConfiguration config = getConfig();
         modelIdToLightLevel.clear();
         if (config.isConfigurationSection("glowing_items")) {
@@ -55,16 +72,11 @@ public class CustomLight extends JavaPlugin {
                 }
             }
         }
+        reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         getLogger().info("Registrierte leuchtende Items: " + modelIdToLightLevel);
     }
 
-    private void checkAndPlaceLight(Player player) {
-        if (player.getInventory().getHelmet() == null) return;
-
-        CustomStack customStack = CustomStack.byItemStack(player.getInventory().getHelmet());
-        if (customStack == null) return;
-
-        int modelId = customStack.getCustomModelData();
+    private void checkAndPlaceLight(Player player, int modelId) {
         if (!modelIdToLightLevel.containsKey(modelId)) return;
 
         int level = modelIdToLightLevel.get(modelId);
@@ -81,9 +93,12 @@ public class CustomLight extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("clreload")) {
-            reloadConfig();
-            loadModelIds();
-            sender.sendMessage("§a[Ethria-Light] Konfiguration neu geladen.");
+            if (sender.hasPermission("customlight.reload")) {
+                loadConfigValues();
+                sender.sendMessage(reloadMessage);
+            } else {
+                sender.sendMessage("§cDu hast keine Berechtigung für diesen Befehl.");
+            }
             return true;
         }
         return false;

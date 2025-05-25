@@ -1,31 +1,80 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>your.package</groupId>
-  <artifactId>GlowingHalo</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <properties>
-    <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-  </properties>
+    <groupId>bloody_mind.package</groupId>
+    <artifactId>CustomLight</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>dev.lone</groupId>
-      <artifactId>itemsadder-api</artifactId>
-      <version>3.6.3</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.papermc.paper</groupId>
-      <artifactId>paper-api</artifactId>
-      <version>1.21.4-R0.1-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
+    <name>CustomLight</name>
+    <description>CustomLight/GlowingHalo Plugin with ItemsAdder, Brigadier, and Redischat support</description>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <repositories>
+      <repository>
+            <id>matteodev</id>
+            <url>https://maven.devs.beer/</url>
+      </repository>
+      <repository>
+            <id>minecraft-libraries</id>
+            <name>Minecraft Libraries</name>
+            <url>https://libraries.minecraft.net</url>
+      </repository>      
+        <!-- Füge hier ggf. das RedisChat-Repository ein, wenn benötigt -->
+        <!--
+        <repository>
+            <id>redischat-repo</id>
+            <url>REPO_URL_EINFÜGEN</url>
+        </repository>
+        -->
+    </repositories>
+
+    <dependencies>
+        <!-- ItemsAdder API -->
+        <dependency>
+            <groupId>dev.lone</groupId>
+            <artifactId>api-itemsadder</artifactId>
+            <version>4.0.10</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Mojang Brigadier -->
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>brigadier</artifactId>
+            <version>1.0.18</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Redischat -->
+        <!-- ACHTUNG: Ersetze groupId, artifactId, version und ggfs. repository-URL mit den offiziellen Redischat-Daten! -->
+        <!--
+        <dependency>
+            <groupId>de.codemc.redischat</groupId>
+            <artifactId>redischat-api</artifactId>
+            <version>${redischat.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Java Compiler Plugin -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
