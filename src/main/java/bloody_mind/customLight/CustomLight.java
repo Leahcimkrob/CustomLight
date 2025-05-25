@@ -39,7 +39,12 @@ public class CustomLight extends JavaPlugin {
                     CustomStack customStack = CustomStack.byItemStack(player.getInventory().getHelmet());
                     int modelId = -1;
                     if (customStack != null) {
-                        modelId = customStack.getCustomModelData();
+                        try {
+                            modelId = Integer.parseInt(customStack.getId());
+                        } catch (NumberFormatException e) {
+                        // ID war doch kein int, ggf. Fehlerbehandlung oder Logging
+                        modelId = -1;
+                        }
                     }
                     String locationKey = player.getWorld().getName() + ":" + player.getLocation().getBlockX() + ":" + player.getLocation().getBlockY() + ":" + player.getLocation().getBlockZ();
                     if (lastModelId.getOrDefault(player.getUniqueId(), -2) != modelId || !locationKey.equals(lastLocationKey.get(player.getUniqueId()))) {
@@ -77,16 +82,24 @@ public class CustomLight extends JavaPlugin {
     }
 
     private void checkAndPlaceLight(Player player, int modelId) {
-        if (!modelIdToLightLevel.containsKey(modelId)) return;
+        getLogger().info("checkAndPlaceLight für " + player.getName() + ", modelId=" + modelId);
+        if (!modelIdToLightLevel.containsKey(modelId)) {
+            getLogger().info("modelId nicht in Map: " + modelId);
+            return;
+        }
 
         int level = modelIdToLightLevel.get(modelId);
         Block lightBlock = player.getLocation().add(0, 2, 0).getBlock();
+        getLogger().info("Setze Licht an " + lightBlock.getLocation() + " auf Level " + level + ", vorher: " + lightBlock.getType());
         if (lightBlock.getType() == Material.AIR || lightBlock.getType() == Material.LIGHT) {
             BlockData data = Bukkit.createBlockData(Material.LIGHT);
             if (data instanceof Levelled) {
-                ((Levelled) data).setLevel(level);
+               ((Levelled) data).setLevel(level);
             }
             lightBlock.setBlockData(data, false);
+            getLogger().info("Block an " + lightBlock.getLocation() + " auf LIGHT gesetzt.");
+        } else {
+            getLogger().info("Block an " + lightBlock.getLocation() + " ist kein AIR/LIGHT sondern " + lightBlock.getType());
         }
     }
 
