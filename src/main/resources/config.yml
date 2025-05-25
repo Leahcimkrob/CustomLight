@@ -1,9 +1,13 @@
 #Language:
-reload-message: "§a[Ethria-Light] Konfiguration neu geladen."
-
+reload-message: "Â§a[Ethria-Light] Konfiguration neu geladen."
 
 # Modell-ID: Lightlevel
 
 glowing_items:
   4304307: 15
-  4304308: 10
+  4304308: 15
+  4304309: 15
+  4304310: 15
+  4304311: 15
+  4304312: 15
+  4304313: 15
