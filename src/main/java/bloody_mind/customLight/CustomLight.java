@@ -1,4 +1,4 @@
-package bloody_mind.package.customLight;
+package bloody_mind.customLight;
 
 import dev.lone.itemsadder.api.CustomStack;
 import org.bukkit.Bukkit;

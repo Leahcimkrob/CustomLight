@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>bloody_mind.package</groupId>
+    <groupId>bloody_mind</groupId>
     <artifactId>CustomLight</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -14,7 +14,6 @@
     <properties>
         <java.version>21</java.version>
     </properties>
-
     <repositories>
       <repository>
             <id>matteodev</id>
@@ -25,6 +24,11 @@
             <name>Minecraft Libraries</name>
             <url>https://libraries.minecraft.net</url>
       </repository>      
+      <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+      </repository>
+ 
         <!-- Füge hier ggf. das RedisChat-Repository ein, wenn benötigt -->
         <!--
         <repository>
@@ -50,6 +54,13 @@
             <version>1.0.18</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Paper API -->
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.4-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>        
 
         <!-- Redischat -->
         <!-- ACHTUNG: Ersetze groupId, artifactId, version und ggfs. repository-URL mit den offiziellen Redischat-Daten! -->

@@ -1,5 +1,5 @@
 name: CustomLight
-main: Bloody_Mind.package.CustomLight
+main: Bloody_Mind.CustomLight
 version: 1.1
 api-version: 1.20
 depend: [ItemsAdder]
