@@ -1,5 +1,6 @@
 #Language:
-reload-message: "§a[Ethria-Light] Konfiguration neu geladen."
+reload-message: "&a[Ethria-Light] Konfiguration neu geladen."
+nopermission: "&a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl."
 
 # Modell-ID: Lightlevel
 
