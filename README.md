@@ -5,8 +5,8 @@ Items with custom models get a light effect
 - The language can also be customized in the config.
 - There must always be a block of air above the head
 
-** Command: /clreload 
-** permission: customlight.reload
+Command: 
+/clreload (permission: customlight.reload)
 
 
 [DE]
@@ -14,6 +14,6 @@ Items mit Custom Models erhalten einen Lichteffekt.
 - Modell-ID und Lichtstärke werden in der Konfiguration festgelegt.
 - Die Sprache kann in der Konfiguration angepasst werden.
 - Es muss immer ein Block Luft über dem Kopf sein
-  
-** Command: /clreload 
-** permission: customlight.reload
+
+Command: 
+/clreload (permission: customlight.reload)
