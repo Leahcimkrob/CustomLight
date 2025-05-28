@@ -5,7 +5,7 @@
 
     <groupId>bloody_mind</groupId>
     <artifactId>CustomLight</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>CustomLight</name>
@@ -29,11 +29,11 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
       </repository>
  
-        <!-- Füge hier ggf. das RedisChat-Repository ein, wenn benötigt -->
+        <!-- Fï¿½ge hier ggf. das RedisChat-Repository ein, wenn benï¿½tigt -->
         <!--
         <repository>
             <id>redischat-repo</id>
-            <url>REPO_URL_EINFÜGEN</url>
+            <url>REPO_URL_EINFï¿½GEN</url>
         </repository>
         -->
     </repositories>

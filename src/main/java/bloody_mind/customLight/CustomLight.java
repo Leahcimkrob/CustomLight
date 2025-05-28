@@ -8,6 +8,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -24,13 +25,15 @@ public class CustomLight extends JavaPlugin {
     private String nopermission;
     private final Map<UUID, Integer> lastModelId = new HashMap<>();
     private final Map<UUID, String> lastLocationKey = new HashMap<>();
-    // Mehrere Positionen tracken:
     private final Map<UUID, List<Location>> lightBlockLocations = new HashMap<>();
+    private List<String> commandAliases = new ArrayList<>();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        updateConfigAliases();
         loadConfigValues();
+        registerCommands();
 
         new BukkitRunnable() {
             @Override
@@ -51,18 +54,15 @@ public class CustomLight extends JavaPlugin {
                     if (modelIdToLightLevel.containsKey(modelId)) {
                         checkAndPlaceLight(player, modelId, lightLocation);
 
-                        // Neue Position zur Liste hinzufügen
                         List<Location> locations = lightBlockLocations.getOrDefault(player.getUniqueId(), new ArrayList<>());
                         if (!locations.contains(lightLocation)) {
                             locations.add(lightLocation);
                         }
-                        // Maximal 3 Positionen speichern (für Lag oder schnelle Bewegung)
                         while (locations.size() > 3) {
                             locations.remove(0);
                         }
                         lightBlockLocations.put(player.getUniqueId(), locations);
                     } else {
-                        // Alle bekannten Positionen dieses Spielers säubern
                         List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
                         if (locations != null) {
                             for (Location loc : locations) {
@@ -82,6 +82,37 @@ public class CustomLight extends JavaPlugin {
                 }
             }
         }.runTaskTimer(this, 0, 10);
+    }
+
+    private void updateConfigAliases() {
+        FileConfiguration config = getConfig();
+        List<String> aliases = config.getStringList("command-aliases");
+        Set<String> defaults = new LinkedHashSet<>(Arrays.asList("clreload"));
+        if (aliases == null || aliases.isEmpty()) {
+            aliases = new ArrayList<>(defaults);
+        } else {
+            aliases.addAll(defaults);
+            aliases = new ArrayList<>(new LinkedHashSet<>(aliases)); // Duplikate entfernen, Reihenfolge erhalten
+        }
+        config.set("command-aliases", aliases);
+        saveConfig();
+        commandAliases = aliases;
+    }
+
+    private void registerCommands() {
+        // Hauptbefehl ist customlight, Aliasse werden gesetzt
+        PluginCommand cmd = getCommand("customlight");
+        if (cmd != null) {
+            cmd.setExecutor(this);
+            cmd.setAliases(commandAliases);
+        }
+        // Für Legacy-Kompatibilität (optional): clreload explizit registrieren
+        if (!commandAliases.contains("clreload")) {
+            PluginCommand reloadCmd = getCommand("clreload");
+            if (reloadCmd != null) {
+                reloadCmd.setExecutor(this);
+            }
+        }
     }
 
     private void loadConfigValues() {
@@ -104,6 +135,7 @@ public class CustomLight extends JavaPlugin {
         }
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
+        commandAliases = config.getStringList("command-aliases");
     }
 
     private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
@@ -139,14 +171,19 @@ public class CustomLight extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (label.equalsIgnoreCase("clreload")) {
-            if (sender.hasPermission("customlight.reload")) {
-                loadConfigValues();
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', reloadMessage));
+        if (label.equalsIgnoreCase("customlight") || commandAliases.contains(label.toLowerCase())) {
+            if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+                if (sender.hasPermission("customlight.reload")) {
+                    loadConfigValues();
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', reloadMessage));
+                } else {
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
+                }
+                return true;
             } else {
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
+                sender.sendMessage(ChatColor.AQUA + "[CustomLight] Benutze /customlight reload");
+                return true;
             }
-            return true;
         }
         return false;
     }

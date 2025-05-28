@@ -1,9 +1,4 @@
-#Language:
-reload-message: "&a[Ethria-Light] Konfiguration neu geladen."
-nopermission: "&a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl."
-
 # Modell-ID: Lightlevel
-
 glowing_items:
   4304307: 15
   4304308: 15
@@ -12,3 +7,12 @@ glowing_items:
   4304311: 15
   4304312: 15
   4304313: 15
+
+# message
+reload-message: "&a[Ethria-Light] Konfiguration neu geladen."
+nopermission: "&c[Ethria-Light] Du hast keine Berechtigung für diesen Befehl."
+
+#Commandalias
+command-aliases:
+  - clreload
+  - lightreload
