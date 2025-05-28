@@ -9,6 +9,7 @@ import org.bukkit.block.data.Levelled;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,17 +17,22 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Location;
 import org.bukkit.ChatColor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class CustomLight extends JavaPlugin {
+public class CustomLight extends JavaPlugin implements TabCompleter {
     private final Map<Integer, Integer> modelIdToLightLevel = new HashMap<>();
     private String reloadMessage;
     private String nopermission;
+    private String nocommand;
     private final Map<UUID, Integer> lastModelId = new HashMap<>();
     private final Map<UUID, String> lastLocationKey = new HashMap<>();
     private final Map<UUID, List<Location>> lightBlockLocations = new HashMap<>();
     private List<String> commandAliases = new ArrayList<>();
+    private List<String> helpMessages = Arrays.asList(
+            "/customlight reload - Konfiguration neu laden"
+    );
 
     @Override
     public void onEnable() {
@@ -100,11 +106,11 @@ public class CustomLight extends JavaPlugin {
     }
 
     private void registerCommands() {
-        // Hauptbefehl ist customlight, Aliasse werden gesetzt
         PluginCommand cmd = getCommand("customlight");
         if (cmd != null) {
             cmd.setExecutor(this);
             cmd.setAliases(commandAliases);
+            cmd.setTabCompleter(this);
         }
         // Für Legacy-Kompatibilität (optional): clreload explizit registrieren
         if (!commandAliases.contains("clreload")) {
@@ -135,7 +141,14 @@ public class CustomLight extends JavaPlugin {
         }
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
+        nocommand = config.getString("nocommand", "§a[Ethria-Light] Unbekannter Befehl. Benutze /customlight help");
         commandAliases = config.getStringList("command-aliases");
+        helpMessages = config.getStringList("help");
+        if (helpMessages == null || helpMessages.isEmpty()) {
+            helpMessages = Arrays.asList(
+                    "/customlight reload - Konfiguration neu laden"
+            );
+        }
     }
 
     private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
@@ -172,6 +185,15 @@ public class CustomLight extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("customlight") || commandAliases.contains(label.toLowerCase())) {
+            // Hilfe ausgeben, wenn keine Argumente oder "help"
+            if (args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("help"))) {
+//                sender.sendMessage(ChatColor.AQUA + "[CustomLight] Hilfe:");
+                for (String helpEntry : helpMessages) {
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', helpEntry));
+                }
+                return true;
+            }
+            // reload
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 if (sender.hasPermission("customlight.reload")) {
                     loadConfigValues();
@@ -180,11 +202,22 @@ public class CustomLight extends JavaPlugin {
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
                 }
                 return true;
-            } else {
-                sender.sendMessage(ChatColor.AQUA + "[CustomLight] Benutze /customlight reload");
-                return true;
             }
+            // Unbekannte Subkommandos
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nocommand));
+            return true;
         }
         return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if ((command.getName().equalsIgnoreCase("customlight") || commandAliases.contains(alias.toLowerCase())) && args.length == 1) {
+            List<String> completions = new ArrayList<>();
+            completions.add("reload");
+            completions.add("help");
+            return completions;
+        }
+        return Collections.emptyList();
     }
 }

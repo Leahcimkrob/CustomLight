@@ -9,10 +9,16 @@ glowing_items:
   4304313: 15
 
 # message
-reload-message: "&a[Ethria-Light] Konfiguration neu geladen."
-nopermission: "&c[Ethria-Light] Du hast keine Berechtigung für diesen Befehl."
+reload-message: "&7[&6Ethria-Light&7] &3Konfiguration neu geladen."
+nopermission: "&7[&6Ethria-Light&7] &3Du hast keine Berechtigung für diesen Befehl."
+nocommand: "&7[&6Ethria-Light&7] &4Unbekannter Befehl. Benutze /customlight help"
+
+# Hilfeeinträge für /customlight help
+help:
+  - "&7[&6Ethria-Light&7] &3Hilfe:"
+  - "&3/customlight reload - Konfiguration neu laden"
+  - "&3/customlight help - Zeigt diese Hilfe an"
 
 #Commandalias
 command-aliases:
-  - clreload
-  - lightreload
+  - clight
