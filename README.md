@@ -10,9 +10,11 @@ Items with custom models get a light effect
 #### Command: 
     Customlight 
         reload - reload config
+        help - open help-menu
   
 #### Permission:
-    customlight.reload - Permission to reload the config
+    customlight.use - Allows use of the CustomLight main command.
+    customlight.reload - Allows reloading the configuration.
 
 
 
@@ -29,6 +31,8 @@ Items mit Custom Models erhalten einen Lichteffekt.
 #### Command: 
     Customlight
         reload - config neu laden
+        help - Das Hilfemenü wird aufgerufen
   
 #### Permission:
-    customlight.reload - Berechtigung den Reload der Config auszuführen
+    customlight.use - Erlaubt die Nutzung des CustomLight-Hauptbefehls
+    customlight.reload - Erlaubt das Neuladen der Konfiguration
