@@ -8,6 +8,7 @@ Items with custom models get a light effect
 - Alias can be set in the COnfig
 
 Command: 
+
   Customlight 
     reload - reload config
   
