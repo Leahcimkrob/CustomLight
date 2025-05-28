@@ -1,17 +1,17 @@
 name: CustomLight
 main: bloody_mind.customLight.CustomLight
-version: 1.2
+version: 1.0
 api-version: 1.19
 author: Leahcimkrob
 commands:
   customlight:
-    description: Hauptbefehl für das CustomLight-Plugin
+    description: Main command for the CustomLight plugin
     usage: /<command> [reload|help]
-    aliases: [] # Wird dynamisch aus der Config ersetzt
+    aliases: [] # Is set dynamically from the config
 permissions:
   customlight.use:
-    description: Erlaubt die Nutzung des CustomLight-Hauptbefehls
+    description: Allows using the CustomLight main command
     default: true
   customlight.reload:
-    description: Erlaubt das Neuladen der Konfiguration
+    description: Allows reloading the configuration
     default: op
