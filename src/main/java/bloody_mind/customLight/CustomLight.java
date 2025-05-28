@@ -16,18 +16,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Location;
 import org.bukkit.ChatColor;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class CustomLight extends JavaPlugin {
     private final Map<Integer, Integer> modelIdToLightLevel = new HashMap<>();
     private String reloadMessage;
-    private String nopermission;    
+    private String nopermission;
     private final Map<UUID, Integer> lastModelId = new HashMap<>();
     private final Map<UUID, String> lastLocationKey = new HashMap<>();
-    private final Map<UUID, Location> lastLightBlockLocation = new HashMap<>();
+    // Mehrere Positionen tracken:
+    private final Map<UUID, List<Location>> lightBlockLocations = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -43,22 +41,35 @@ public class CustomLight extends JavaPlugin {
                     if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().hasCustomModelData()) {
                         modelId = helmet.getItemMeta().getCustomModelData();
                     }
-                    String locationKey = player.getWorld().getName() + ":" +
-                            player.getLocation().getBlockX() + ":" +
-                            player.getLocation().getBlockY() + ":" +
-                            player.getLocation().getBlockZ();
+                    String locationKey = player.getWorld().getName() + ":"
+                            + player.getLocation().getBlockX() + ":"
+                            + player.getLocation().getBlockY() + ":"
+                            + player.getLocation().getBlockZ();
 
                     Location lightLocation = player.getLocation().add(0, 2, 0).getBlock().getLocation();
 
                     if (modelIdToLightLevel.containsKey(modelId)) {
-                        checkAndPlaceLight(player, modelId);
-                        lastLightBlockLocation.put(player.getUniqueId(), lightLocation);
+                        checkAndPlaceLight(player, modelId, lightLocation);
+
+                        // Neue Position zur Liste hinzufügen
+                        List<Location> locations = lightBlockLocations.getOrDefault(player.getUniqueId(), new ArrayList<>());
+                        if (!locations.contains(lightLocation)) {
+                            locations.add(lightLocation);
+                        }
+                        // Maximal 3 Positionen speichern (für Lag oder schnelle Bewegung)
+                        while (locations.size() > 3) {
+                            locations.remove(0);
+                        }
+                        lightBlockLocations.put(player.getUniqueId(), locations);
                     } else {
-                        Location lastLoc = lastLightBlockLocation.remove(player.getUniqueId());
-                        if (lastLoc != null) {
-                            Block block = lastLoc.getBlock();
-                            if (block.getType() == Material.LIGHT) {
-                                block.setType(Material.AIR);
+                        // Alle bekannten Positionen dieses Spielers säubern
+                        List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
+                        if (locations != null) {
+                            for (Location loc : locations) {
+                                Block block = loc.getBlock();
+                                if (block.getType() == Material.LIGHT) {
+                                    block.setType(Material.AIR);
+                                }
                             }
                         }
                     }
@@ -95,19 +106,34 @@ public class CustomLight extends JavaPlugin {
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
     }
 
-    private void checkAndPlaceLight(Player player, int modelId) {
+    private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
         if (!modelIdToLightLevel.containsKey(modelId)) {
             return;
         }
 
         int level = modelIdToLightLevel.get(modelId);
-        Block lightBlock = player.getLocation().add(0, 2, 0).getBlock();
+        Block lightBlock = lightLocation.getBlock();
         if (lightBlock.getType() == Material.AIR || lightBlock.getType() == Material.LIGHT) {
             BlockData data = Bukkit.createBlockData(Material.LIGHT);
             if (data instanceof Levelled) {
                 ((Levelled) data).setLevel(level);
             }
             lightBlock.setBlockData(data, false);
+        }
+
+        // Im Umkreis von 1 Block andere Lichtblöcke entfernen, außer dem aktuellen
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    Location nearby = lightLocation.clone().add(dx, dy, dz);
+                    if (!nearby.equals(lightLocation)) {
+                        Block block = nearby.getBlock();
+                        if (block.getType() == Material.LIGHT) {
+                            block.setType(Material.AIR);
+                        }
+                    }
+                }
+            }
         }
     }
 
