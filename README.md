@@ -26,8 +26,8 @@ Items mit Custom Models erhalten einen Lichteffekt.
 
 
 Command: 
-  'Customlight
-    reload - config neu laden'
+  Customlight
+    reload - config neu laden
   
 Permission:
   customlight.reload - Berechtigung den Reload der Config auszuführen
