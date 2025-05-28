@@ -1,10 +1,17 @@
 name: CustomLight
 main: bloody_mind.customLight.CustomLight
-version: 1.1
-api-version: 1.20
-depend: [ItemsAdder]
+version: 1.0
+api-version: 1.19
+author: Leahcimkrob
 commands:
   customlight:
-    description: Reloadet die CustomLight-Konfiguration
-    usage: /<command>
-    permission: customlight.reload
+    description: Hauptbefehl für das CustomLight-Plugin
+    usage: /<command> [reload|help]
+    aliases: [] # Wird dynamisch aus der Config ersetzt
+permissions:
+  customlight.use:
+    description: Erlaubt die Nutzung des CustomLight-Hauptbefehls
+    default: true
+  customlight.reload:
+    description: Erlaubt das Neuladen der Konfiguration
+    default: op

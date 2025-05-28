@@ -109,15 +109,8 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         PluginCommand cmd = getCommand("customlight");
         if (cmd != null) {
             cmd.setExecutor(this);
-            cmd.setAliases(commandAliases);
+            cmd.setAliases(commandAliases); // Aliase NUR aus Config!
             cmd.setTabCompleter(this);
-        }
-        // Für Legacy-Kompatibilität (optional): clreload explizit registrieren
-        if (!commandAliases.contains("clreload")) {
-            PluginCommand reloadCmd = getCommand("clreload");
-            if (reloadCmd != null) {
-                reloadCmd.setExecutor(this);
-            }
         }
     }
 
@@ -185,9 +178,14 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("customlight") || commandAliases.contains(label.toLowerCase())) {
+            // Permission check für ALLES
+            if (!sender.hasPermission("customlight.use")) {
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
+                return true;
+            }
+
             // Hilfe ausgeben, wenn keine Argumente oder "help"
             if (args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("help"))) {
-//                sender.sendMessage(ChatColor.AQUA + "[CustomLight] Hilfe:");
                 for (String helpEntry : helpMessages) {
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', helpEntry));
                 }
@@ -209,7 +207,6 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         }
         return false;
     }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if ((command.getName().equalsIgnoreCase("customlight") || commandAliases.contains(alias.toLowerCase())) && args.length == 1) {
