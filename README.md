@@ -7,7 +7,7 @@ Items with custom models get a light effect
 - There must always be a block of air above the head
 
 Command: 
-/clreload (permission: customlight.reload)
+/customlight reload (permission: customlight.reload) - Alias can be set in the COnfig
 
 
 ** [DE]
@@ -18,4 +18,4 @@ Items mit Custom Models erhalten einen Lichteffekt.
 - Es muss immer ein Block Luft über dem Kopf sein
 
 Command: 
-/clreload (permission: customlight.reload)
+/customlight reload (permission: customlight.reload) - Alias in der Config einstellbar
