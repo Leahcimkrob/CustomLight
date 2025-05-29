@@ -33,6 +33,8 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     private List<String> helpMessages = Arrays.asList(
             "/customlight reload - Konfiguration neu laden"
     );
+    private int removalRadius = 1;
+    private int updateInterval = 10;
     private boolean removeAllOnHelmetOff = true;
 
     @Override
@@ -42,6 +44,10 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         loadConfigValues();
         registerCommands();
 
+        startLightTask();
+    }
+
+    private void startLightTask() {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -70,12 +76,14 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                         }
                         lightBlockLocations.put(player.getUniqueId(), locations);
                     } else {
-                        List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
-                        if (locations != null) {
-                            for (Location loc : locations) {
-                                Block block = loc.getBlock();
-                                if (block.getType() == Material.LIGHT) {
-                                    block.setType(Material.AIR);
+                        if (removeAllOnHelmetOff) {
+                            List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
+                            if (locations != null) {
+                                for (Location loc : locations) {
+                                    Block block = loc.getBlock();
+                                    if (block.getType() == Material.LIGHT) {
+                                        block.setType(Material.AIR);
+                                    }
                                 }
                             }
                         }
@@ -88,7 +96,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                     }
                 }
             }
-        }.runTaskTimer(this, 0, 10);
+        }.runTaskTimer(this, 0, updateInterval);
     }
 
     private void updateConfigAliases() {
@@ -136,6 +144,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         this.removalRadius = config.getInt("radius", 1);
         this.updateInterval = config.getInt("update-interval", 10);
         this.removeAllOnHelmetOff = config.getBoolean("remove-all-on-helmet-off", true);
+
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
         nocommand = config.getString("nocommand", "§a[Ethria-Light] Unbekannter Befehl. Benutze /customlight help");
@@ -146,35 +155,6 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                     "/customlight reload - Konfiguration neu laden"
             );
         }
-    }
-
-    private void startLightTask() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    // ... (wie gehabt)
-                    if (modelIdToLightLevel.containsKey(modelId)) {
-                        // ... (wie gehabt)
-                    } else {
-                        // Anpassung hier!
-                        if (removeAllOnHelmetOff) {
-                            List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
-                            if (locations != null) {
-                                for (Location loc : locations) {
-                                    Block block = loc.getBlock();
-                                    if (block.getType() == Material.LIGHT) {
-                                        block.setType(Material.AIR);
-                                    }
-                                }
-                            }
-                        }
-                        // Falls du ein alternatives Verhalten bei false möchtest, kannst du das Standardverhalten hier belassen oder anpassen.
-                    }
-                    // ...
-                }
-            }
-        }.runTaskTimer(this, 0, updateInterval);
     }
 
     private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
@@ -192,10 +172,10 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
             lightBlock.setBlockData(data, false);
         }
 
-        // Im Umkreis von 1 Block andere Lichtblöcke entfernen, außer dem aktuellen
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = -1; dz <= 1; dz++) {
+        // Entferne Lichtblöcke im konfigurierbaren Umkreis
+        for (int dx = -removalRadius; dx <= removalRadius; dx++) {
+            for (int dy = -removalRadius; dy <= removalRadius; dy++) {
+                for (int dz = -removalRadius; dz <= removalRadius; dz++) {
                     Location nearby = lightLocation.clone().add(dx, dy, dz);
                     if (!nearby.equals(lightLocation)) {
                         Block block = nearby.getBlock();
@@ -240,6 +220,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         }
         return false;
     }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if ((command.getName().equalsIgnoreCase("customlight") || commandAliases.contains(alias.toLowerCase())) && args.length == 1) {
