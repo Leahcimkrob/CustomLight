@@ -9,9 +9,10 @@ glowing_items:
   4304313: 15
 
 # Lichtblockerkennung
-radius: 1               # Entfernung von Lichtblöcken in diesem Umkreis (Default: 1)
-update-interval: 10     # in Ticks
+radius: 10               # Entfernung von Lichtblöcken in diesem Umkreis (Default: 1)
+update-interval: 1     # in Ticks
 remove-all-on-helmet-off: true   # true = alle Lichtblöcke beim Abnehmen löschen, false = Standardverhalten
+max-light-blocks-per-player: 3
 
 # message
 reload-message: "&7[&6Ethria-Light&7] &3Konfiguration neu geladen."

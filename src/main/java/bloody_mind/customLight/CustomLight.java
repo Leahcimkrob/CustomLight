@@ -17,7 +17,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.Location;
 import org.bukkit.ChatColor;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -28,7 +27,8 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     private String nocommand;
     private final Map<UUID, Integer> lastModelId = new HashMap<>();
     private final Map<UUID, String> lastLocationKey = new HashMap<>();
-    private final Map<UUID, List<Location>> lightBlockLocations = new HashMap<>();
+    // Speichere Lichtblock-Positionen als Set für effiziente contains/remove-Operationen
+    private final Map<UUID, Set<Location>> lightBlockLocations = new HashMap<>();
     private List<String> commandAliases = new ArrayList<>();
     private List<String> helpMessages = Arrays.asList(
             "/customlight reload - Konfiguration neu laden"
@@ -36,6 +36,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     private int removalRadius = 1;
     private int updateInterval = 10;
     private boolean removeAllOnHelmetOff = true;
+    private int maxLightBlocksPerPlayer = 3; // jetzt konfigurierbar
 
     @Override
     public void onEnable() {
@@ -65,27 +66,17 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                     Location lightLocation = player.getLocation().add(0, 2, 0).getBlock().getLocation();
 
                     if (modelIdToLightLevel.containsKey(modelId)) {
-                        checkAndPlaceLight(player, modelId, lightLocation);
+                        placeAndTrackLightBlock(player, modelId, lightLocation);
 
-                        List<Location> locations = lightBlockLocations.getOrDefault(player.getUniqueId(), new ArrayList<>());
-                        if (!locations.contains(lightLocation)) {
-                            locations.add(lightLocation);
-                        }
-                        while (locations.size() > 3) {
-                            locations.remove(0);
-                        }
-                        lightBlockLocations.put(player.getUniqueId(), locations);
+                        // Entferne zu weit entfernte Lichtblöcke
+                        removeDistantLightBlocks(player, lightLocation);
+
+                        // Begrenze die Anzahl der gespeicherten Lichtblöcke pro Spieler
+                        trimPlayerLightBlocks(player);
                     } else {
+                        // Helm abgenommen oder ungültig: entferne alle gespeicherten Lichtblöcke
                         if (removeAllOnHelmetOff) {
-                            List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
-                            if (locations != null) {
-                                for (Location loc : locations) {
-                                    Block block = loc.getBlock();
-                                    if (block.getType() == Material.LIGHT) {
-                                        block.setType(Material.AIR);
-                                    }
-                                }
-                            }
+                            removeAllLightBlocks(player);
                         }
                     }
 
@@ -102,7 +93,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     private void updateConfigAliases() {
         FileConfiguration config = getConfig();
         List<String> aliases = config.getStringList("command-aliases");
-        Set<String> defaults = new LinkedHashSet<>(Arrays.asList("clreload"));
+        Set<String> defaults = new LinkedHashSet<>(Collections.singletonList("clreload"));
         if (aliases == null || aliases.isEmpty()) {
             aliases = new ArrayList<>(defaults);
         } else {
@@ -144,6 +135,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         this.removalRadius = config.getInt("radius", 1);
         this.updateInterval = config.getInt("update-interval", 10);
         this.removeAllOnHelmetOff = config.getBoolean("remove-all-on-helmet-off", true);
+        this.maxLightBlocksPerPlayer = config.getInt("max-light-blocks-per-player", 3);
 
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
@@ -157,11 +149,8 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
         }
     }
 
-    private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
-        if (!modelIdToLightLevel.containsKey(modelId)) {
-            return;
-        }
-
+    // Lichtblock setzen und tracken
+    private void placeAndTrackLightBlock(Player player, int modelId, Location lightLocation) {
         int level = modelIdToLightLevel.get(modelId);
         Block lightBlock = lightLocation.getBlock();
         if (lightBlock.getType() == Material.AIR || lightBlock.getType() == Material.LIGHT) {
@@ -171,18 +160,49 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
             }
             lightBlock.setBlockData(data, false);
         }
+        Set<Location> locations = lightBlockLocations.computeIfAbsent(player.getUniqueId(), k -> new LinkedHashSet<>());
+        locations.add(lightLocation);
+    }
 
-        // Entferne Lichtblöcke im konfigurierbaren Umkreis
-        for (int dx = -removalRadius; dx <= removalRadius; dx++) {
-            for (int dy = -removalRadius; dy <= removalRadius; dy++) {
-                for (int dz = -removalRadius; dz <= removalRadius; dz++) {
-                    Location nearby = lightLocation.clone().add(dx, dy, dz);
-                    if (!nearby.equals(lightLocation)) {
-                        Block block = nearby.getBlock();
-                        if (block.getType() == Material.LIGHT) {
-                            block.setType(Material.AIR);
-                        }
-                    }
+    // Entferne Lichtblöcke, die zu weit vom Spieler weg sind
+    private void removeDistantLightBlocks(Player player, Location currentLightLoc) {
+        Set<Location> locations = lightBlockLocations.get(player.getUniqueId());
+        if (locations == null) return;
+        Iterator<Location> it = locations.iterator();
+        while (it.hasNext()) {
+            Location loc = it.next();
+            if (loc.distance(currentLightLoc) > removalRadius) {
+                Block block = loc.getBlock();
+                if (block.getType() == Material.LIGHT) {
+                    block.setType(Material.AIR);
+                }
+                it.remove();
+            }
+        }
+    }
+
+    // Maximal erlaubte Lichtblöcke pro Spieler limitieren (FIFO-Prinzip)
+    private void trimPlayerLightBlocks(Player player) {
+        Set<Location> locations = lightBlockLocations.get(player.getUniqueId());
+        if (locations == null) return;
+        while (locations.size() > maxLightBlocksPerPlayer) {
+            Location oldest = locations.iterator().next();
+            Block block = oldest.getBlock();
+            if (block.getType() == Material.LIGHT) {
+                block.setType(Material.AIR);
+            }
+            locations.remove(oldest);
+        }
+    }
+
+    // Entferne alle gespeicherten Lichtblöcke eines Spielers
+    private void removeAllLightBlocks(Player player) {
+        Set<Location> locations = lightBlockLocations.remove(player.getUniqueId());
+        if (locations != null) {
+            for (Location loc : locations) {
+                Block block = loc.getBlock();
+                if (block.getType() == Material.LIGHT) {
+                    block.setType(Material.AIR);
                 }
             }
         }
@@ -191,20 +211,17 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("customlight") || commandAliases.contains(label.toLowerCase())) {
-            // Permission check für ALLES
             if (!sender.hasPermission("customlight.use")) {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nopermission));
                 return true;
             }
 
-            // Hilfe ausgeben, wenn keine Argumente oder "help"
             if (args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("help"))) {
                 for (String helpEntry : helpMessages) {
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', helpEntry));
                 }
                 return true;
             }
-            // reload
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 if (sender.hasPermission("customlight.reload")) {
                     loadConfigValues();
@@ -214,7 +231,6 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                 }
                 return true;
             }
-            // Unbekannte Subkommandos
             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', nocommand));
             return true;
         }
