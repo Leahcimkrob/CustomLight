@@ -33,6 +33,7 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
     private List<String> helpMessages = Arrays.asList(
             "/customlight reload - Konfiguration neu laden"
     );
+    private boolean removeAllOnHelmetOff = true;
 
     @Override
     public void onEnable() {
@@ -132,6 +133,9 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                 }
             }
         }
+        this.removalRadius = config.getInt("radius", 1);
+        this.updateInterval = config.getInt("update-interval", 10);
+        this.removeAllOnHelmetOff = config.getBoolean("remove-all-on-helmet-off", true);
         reloadMessage = config.getString("reload-message", "§a[Ethria-Light] Konfiguration neu geladen.");
         nopermission = config.getString("nopermission", "§a[Ethria-Light] Du hast keine Berechtigung für diesen Befehl.");
         nocommand = config.getString("nocommand", "§a[Ethria-Light] Unbekannter Befehl. Benutze /customlight help");
@@ -142,6 +146,35 @@ public class CustomLight extends JavaPlugin implements TabCompleter {
                     "/customlight reload - Konfiguration neu laden"
             );
         }
+    }
+
+    private void startLightTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    // ... (wie gehabt)
+                    if (modelIdToLightLevel.containsKey(modelId)) {
+                        // ... (wie gehabt)
+                    } else {
+                        // Anpassung hier!
+                        if (removeAllOnHelmetOff) {
+                            List<Location> locations = lightBlockLocations.remove(player.getUniqueId());
+                            if (locations != null) {
+                                for (Location loc : locations) {
+                                    Block block = loc.getBlock();
+                                    if (block.getType() == Material.LIGHT) {
+                                        block.setType(Material.AIR);
+                                    }
+                                }
+                            }
+                        }
+                        // Falls du ein alternatives Verhalten bei false möchtest, kannst du das Standardverhalten hier belassen oder anpassen.
+                    }
+                    // ...
+                }
+            }
+        }.runTaskTimer(this, 0, updateInterval);
     }
 
     private void checkAndPlaceLight(Player player, int modelId, Location lightLocation) {
