@@ -23,6 +23,7 @@ Items with custom models get a light effect
 
 ## [DE]
 Das Plugin arbeitet mit Paper und Itemsadder.
+
 Items mit Custom Models erhalten einen Lichteffekt.
 - Modell-ID und Lichtstärke werden in der Konfiguration festgelegt.
 - Die Sprache kann in der Konfiguration angepasst werden.
