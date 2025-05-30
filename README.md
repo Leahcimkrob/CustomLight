@@ -1,6 +1,7 @@
 # CustomLight
-## [ENG]
 
+## [ENG]
+The plugin works with Paper and Itemsadder.
 Items with custom models get a light effect
 - The model ID and light level are set in the config.
 - The language can also be customized in the config.
@@ -20,7 +21,7 @@ Items with custom models get a light effect
 
 
 ## [DE]
-
+Das Plugin arbeitet mit Paper und Itemsadder.
 Items mit Custom Models erhalten einen Lichteffekt.
 - Modell-ID und Lichtstärke werden in der Konfiguration festgelegt.
 - Die Sprache kann in der Konfiguration angepasst werden.
