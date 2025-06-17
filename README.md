@@ -1,5 +1,10 @@
 # CustomLight
 
+Lizenz
+Dieses Projekt steht unter der MIT-Lizenz – siehe LICENSE für Details.
+
+This project is licensed under the MIT License – see LICENSE for details.
+
 ## [ENG]
 The plugin works with Paper and Itemsadder.
 
